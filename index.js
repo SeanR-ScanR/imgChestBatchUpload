@@ -4,21 +4,27 @@ import axios from "axios";
 import _ from "lodash";
 import FormData from "form-data";
 import axiosRateLimit from "axios-rate-limit";
+import { xml2js } from "xml-js";
 
 global.FormData = FormData;
 dotenv.config();
 
+const numberFormat = new Intl.NumberFormat("fr-FR", {
+  minimumIntegerDigits: 2,
+});
+const f = numberFormat.format;
+
 const comickFolder =
   "C:/Users/lucas/OneDrive/Documents/Suwayomi/downloads/mangas/Comick (FR)/";
 
-const serie = "RuriDragon";
+const serie = "MegaHeart";
 
 const postRoute = "https://api.imgchest.com/v1/post";
 
 const addPostRoute = (id) => `https://api.imgchest.com/v1/post/${id}/add`;
 
 const http = axiosRateLimit(axios.create(), {
-  maxRequests: 30,
+  maxRequests: 20,
   perMilliseconds: 60000,
 });
 
@@ -40,7 +46,6 @@ const main = async () => {
       teams: regex[1],
     };
 
-    const chapterFolder = fs.readdirSync(chapitre.folder);
     const allImage = fs
       .readdirSync(chapitre.folder)
       .filter((n) => !n.endsWith(".xml"))
@@ -48,6 +53,19 @@ const main = async () => {
         stream: fs.createReadStream(`${chapitre.folder}/${n}`),
         filename: n,
       }));
+
+    const xml = fs
+      .readdirSync(chapitre.folder)
+      .filter((n) => n.endsWith(".xml"))[0];
+
+    const ci = xml2js(fs.readFileSync(`${chapitre.folder}/${xml}`), {
+      compact: true,
+      spaces: 4,
+    }).ComicInfo;
+
+    const date = new Date(
+      `${ci.Year._text}-${f(ci.Month._text)}-${f(ci.Day._text)}`
+    ).getTime();
 
     const chuncks = _.chunk(allImage, 20);
 
@@ -97,7 +115,7 @@ const main = async () => {
     json.chapters[chapitre.chapitre] = {
       title: chapitre.name,
       volume: chapitre?.volume ?? "",
-      last_updated: Date.now(),
+      last_updated: date,
       groups: {
         [chapitre.teams]: `/proxy/api/imgchest/chapter/${id}`,
       },
