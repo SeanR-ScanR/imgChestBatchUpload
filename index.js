@@ -17,7 +17,7 @@ const f = numberFormat.format;
 const comickFolder =
   "C:/Users/lucas/OneDrive/Documents/Suwayomi/downloads/mangas/Comick (FR)/";
 
-const serie = "MegaHeart";
+const serie = "";
 
 const postRoute = "https://api.imgchest.com/v1/post";
 
@@ -63,9 +63,13 @@ const main = async () => {
       spaces: 4,
     }).ComicInfo;
 
-    const date = new Date(
-      `${ci.Year._text}-${f(ci.Month._text)}-${f(ci.Day._text)}`
-    ).getTime();
+    const date = `${
+      (new Date(
+        `${ci.Year._text}-${f(ci.Month._text)}-${f(ci.Day._text)}`
+      ).getTime() /
+        1000) |
+      0
+    }`;
 
     const chuncks = _.chunk(allImage, 20);
 
